@@ -4,6 +4,7 @@ namespace Brash\Eloquent;
 
 use Illuminate\Cache\TaggableStore;
 use Illuminate\Contracts\Cache\Repository as Cache;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
@@ -80,7 +81,7 @@ abstract class AbstractCachable
         $user = $this->request->user();
         $key = '';
 
-        if ($user->roles && $user->roles instanceof Collection) {
+        if ($user instanceof Model && $user->roles instanceof Collection) {
             $key = 'roles:%s';
 
             $roles = $user->roles->map(function ($item) {

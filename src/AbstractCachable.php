@@ -35,13 +35,13 @@ abstract class AbstractCachable
      * CachableQueryBuilder constructor.
      *
      * @param Cache                 $cache
-     * @param int                   $ttl
+     * @param float                 $ttl
      * @param Request|null          $request
      * @param null|string           $env
      */
     public function __construct(
         Cache $cache,
-        int $ttl = 10,
+        float $ttl = 10,
         ?Request $request = null,
         ?string $env = null
     ) {
@@ -79,7 +79,7 @@ abstract class AbstractCachable
     protected function getUserCacheKey(): string
     {
         $user = $this->request->user();
-        $key = '';
+        $key = null;
 
         if ($user instanceof Model && $user->roles instanceof Collection) {
             $key = 'roles:%s';
@@ -96,8 +96,7 @@ abstract class AbstractCachable
 
     protected function getQueryCacheKey(): string
     {
-        $cacheKey = '';
-
+        $cacheKey = null;
         $queryArray = $this->request->query->all();
 
         if (!empty($queryArray)) {
@@ -117,8 +116,8 @@ abstract class AbstractCachable
     protected function getCacheKey(...$params): string
     {
         $key = sprintf('querybuilder:%s', $this->getTable());
-        $key = sprintf('%s:%s', $key, $this->getUserCacheKey());
-        $key = sprintf('%s:%s', $key, $this->getQueryCacheKey());
+        $key = $this->getUserCacheKey() ? sprintf('%s:%s', $key, $this->getUserCacheKey()) : $key;
+        $key = $this->getQueryCacheKey() ? sprintf('%s:%s', $key, $this->getQueryCacheKey()) : $key;
 
         if ($this->cacheKey) {
             $key = sprintf('%s:%s', $key, $this->cacheKey);

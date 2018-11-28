@@ -15,10 +15,19 @@ class CachableRepository extends AbstractCachable implements CachableRepositoryI
      */
     private $repository;
 
+    /**
+     * CachableRepository constructor.
+     *
+     * @param RepositoryInterface $repository
+     * @param Cache               $cache
+     * @param float               $ttl
+     * @param Request|null        $request
+     * @param string|null         $env
+     */
     public function __construct(
         RepositoryInterface $repository,
         Cache $cache,
-        int $ttl = 10,
+        float $ttl = 10,
         ?Request $request = null,
         ?string $env = null
     ) {

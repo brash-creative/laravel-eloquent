@@ -22,14 +22,14 @@ class CachableQueryBuilder extends AbstractCachable implements CachableQueryBuil
      *
      * @param QueryBuilderInterface $queryBuilder
      * @param Cache                 $cache
-     * @param int                   $ttl
+     * @param float                 $ttl
      * @param Request|null          $request
      * @param null|string           $env
      */
     public function __construct(
         QueryBuilderInterface $queryBuilder,
         Cache $cache,
-        int $ttl = 10,
+        float $ttl = 10,
         ?Request $request = null,
         ?string $env = null
     ) {

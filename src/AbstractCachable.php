@@ -76,7 +76,7 @@ abstract class AbstractCachable
         $this->cache = $cache;
     }
 
-    protected function getUserCacheKey(): string
+    protected function getUserCacheKey():? string
     {
         $user = $this->request->user();
         $key = null;
@@ -94,7 +94,7 @@ abstract class AbstractCachable
         return $key;
     }
 
-    protected function getQueryCacheKey(): string
+    protected function getQueryCacheKey():? string
     {
         $cacheKey = null;
         $queryArray = $this->request->query->all();

@@ -78,7 +78,9 @@ class QueryBuilder implements QueryBuilderInterface
 
     public function paginate(): LengthAwarePaginator
     {
-        return $this->getQuery()->paginate();
+        $limit = $this->request->query->get('limit');
+
+        return $this->getQuery()->paginate($limit);
     }
 
     public function count(): int

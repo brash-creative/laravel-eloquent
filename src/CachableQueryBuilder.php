@@ -6,89 +6,60 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Contracts\Cache\Repository as Cache;
-use Illuminate\Http\Request;
 
 class CachableQueryBuilder extends AbstractCachable implements CachableQueryBuilderInterface
 {
-
-    /**
-     * @var QueryBuilderInterface
-     */
-    private $queryBuilder;
-
-    /**
-     * CachableQueryBuilder constructor.
-     *
-     * @param QueryBuilderInterface $queryBuilder
-     * @param Cache                 $cache
-     * @param float                 $ttl
-     * @param Request|null          $request
-     * @param null|string           $env
-     */
-    public function __construct(
-        QueryBuilderInterface $queryBuilder,
-        Cache $cache,
-        float $ttl = 10,
-        ?Request $request = null,
-        ?string $env = null
-    ) {
-        $this->queryBuilder = $queryBuilder;
-
-        parent::__construct($cache, $ttl, $request, $env);
-    }
-
     public function getModel(): Model
     {
-        return $this->queryBuilder->getModel();
+        return $this->repository->getModel();
     }
 
     public function getQuery(): Builder
     {
-        return $this->queryBuilder->getQuery();
+        return $this->repository->getQuery();
     }
 
-    public function inject(callable $callable): QueryBuilderInterface
+    public function inject(callable $callable): RepositoryInterface
     {
-        return $this->queryBuilder->inject($callable);
+        return $this->repository->inject($callable);
     }
 
     public function get(): Collection
     {
         if (!$this->cache) {
-            return $this->queryBuilder->get();
+            return $this->repository->get();
         }
 
         $key = $this->getCacheKey('get');
 
         return $this->cache->remember($key, $this->ttl, function () {
-            return $this->queryBuilder->get();
+            return $this->repository->get();
         });
     }
 
     public function paginate(): LengthAwarePaginator
     {
         if (!$this->cache) {
-            return $this->queryBuilder->paginate();
+            return $this->repository->paginate();
         }
 
         $key = $this->getCacheKey('paginate');
 
         return $this->cache->remember($key, $this->ttl, function () {
-            return $this->queryBuilder->paginate();
+            return $this->repository->paginate();
         });
     }
 
     public function count(): int
     {
         if (!$this->cache) {
-            return $this->queryBuilder->count();
+            return $this->repository->count();
         }
 
         $key = $this->getCacheKey('count');
 
         return $this->cache->remember($key, $this->ttl, function () {
-            return $this->queryBuilder->count();
+            return $this->repository->count();
         });
     }
 

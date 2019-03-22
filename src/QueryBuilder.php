@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
-class QueryBuilder implements QueryBuilderInterface
+class QueryBuilder implements RepositoryInterface
 {
     /**
      * @var Model
@@ -64,11 +64,16 @@ class QueryBuilder implements QueryBuilderInterface
         return $this->model;
     }
 
-    public function inject(callable $callable): QueryBuilderInterface
+    public function inject(callable $callable): RepositoryInterface
     {
         $this->injections[] = $callable;
 
         return $this;
+    }
+
+    public function find($id): Model
+    {
+        return $this->getQuery()->find($id);
     }
 
     public function get(): Collection
@@ -91,7 +96,7 @@ class QueryBuilder implements QueryBuilderInterface
     public function getQuery(): Builder
     {
         $query = (clone $this->model)
-            ->query()
+            ->newQuery()
             ->with($this->getWith())
             ->withCount($this->getWithCount());
 
@@ -149,5 +154,26 @@ class QueryBuilder implements QueryBuilderInterface
         foreach ($sortArray as $column => $direction) {
             $builder->orderBy($column, $direction);
         }
+    }
+
+    public function with(array $with): RepositoryInterface
+    {
+        $this->getQuery()->with($with);
+
+        return $this;
+    }
+
+    public function withCount(array $withCount): RepositoryInterface
+    {
+        $this->getQuery()->withCount($withCount);
+
+        return $this;
+    }
+
+    public function orderBy(OrderBy $orderBy): RepositoryInterface
+    {
+        $this->getQuery()->orderBy($orderBy->getColumn(), $orderBy->getDirection());
+
+        return $this;
     }
 }

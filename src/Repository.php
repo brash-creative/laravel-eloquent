@@ -5,7 +5,7 @@ namespace Brash\Eloquent;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Collection;
 
 class Repository implements RepositoryInterface
 {
@@ -92,7 +92,7 @@ class Repository implements RepositoryInterface
     public function getQuery(): Builder
     {
         $query = (clone $this->model)
-            ->query()
+            ->newQuery()
             ->with($this->with)
             ->withCount($this->withCount);
 

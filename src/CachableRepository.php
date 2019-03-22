@@ -2,40 +2,13 @@
 
 namespace Brash\Eloquent;
 
-use Illuminate\Contracts\Cache\Repository as Cache;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Collection;
 
 class CachableRepository extends AbstractCachable implements CachableRepositoryInterface
 {
-    /**
-     * @var RepositoryInterface
-     */
-    private $repository;
-
-    /**
-     * CachableRepository constructor.
-     *
-     * @param RepositoryInterface $repository
-     * @param Cache               $cache
-     * @param float               $ttl
-     * @param Request|null        $request
-     * @param string|null         $env
-     */
-    public function __construct(
-        RepositoryInterface $repository,
-        Cache $cache,
-        float $ttl = 10,
-        ?Request $request = null,
-        ?string $env = null
-    ) {
-        $this->repository = $repository;
-
-        parent::__construct($cache, $ttl, $request, $env);
-    }
-
     public function find($id): Model
     {
         if (!$this->cache) {
@@ -49,7 +22,7 @@ class CachableRepository extends AbstractCachable implements CachableRepositoryI
         });
     }
 
-    public function get(): \Illuminate\Support\Collection
+    public function get(): Collection
     {
         if (!$this->cache) {
             return $this->repository->get();
@@ -93,6 +66,7 @@ class CachableRepository extends AbstractCachable implements CachableRepositoryI
 
     public function with(array $with): RepositoryInterface
     {
+        $this->with = $with;
         $this->repository->with($with);
 
         return $this;
@@ -100,6 +74,7 @@ class CachableRepository extends AbstractCachable implements CachableRepositoryI
 
     public function withCount(array $withCount): RepositoryInterface
     {
+        $this->withCount = $withCount;
         $this->repository->withCount($withCount);
 
         return $this;

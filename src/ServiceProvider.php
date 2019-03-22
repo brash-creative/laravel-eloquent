@@ -4,6 +4,11 @@ namespace Brash\Eloquent;
 
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 
+/**
+ * Class ServiceProvider
+ * @package Brash\Eloquent
+ * @codeCoverageIgnore
+ */
 class ServiceProvider extends BaseServiceProvider
 {
     /**

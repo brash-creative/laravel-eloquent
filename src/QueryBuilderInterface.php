@@ -13,7 +13,7 @@ interface QueryBuilderInterface
 
     public function getQuery(): Builder;
 
-    public function inject(callable $callable): QueryBuilderInterface;
+    public function inject(callable $callable): RepositoryInterface;
 
     public function get(): Collection;
 

@@ -85,31 +85,36 @@ class QueryBuilder implements QueryBuilderInterface
     }
 
     /**
-     * @param int $id
+     * @param int   $id
+     * @param array $columns
      *
      * @return Model
      */
-    public function find($id): Model
+    public function find($id, array $columns = ['*']): Model
     {
-        return $this->getQuery()->find($id);
+        return $this->getQuery()->find($id, $columns);
     }
 
     /**
+     * @param array $columns
+     *
      * @return Collection
      */
-    public function get(): Collection
+    public function get(array $columns = ['*']): Collection
     {
-        return $this->getQuery()->get();
+        return $this->getQuery()->get($columns);
     }
 
     /**
+     * @param array $columns
+     *
      * @return LengthAwarePaginator
      */
-    public function paginate(): LengthAwarePaginator
+    public function paginate(array $columns = ['*']): LengthAwarePaginator
     {
         $limit = $this->request->query->get('limit');
 
-        return $this->getQuery()->paginate($limit);
+        return $this->getQuery()->paginate($limit, $columns);
     }
 
     /**

@@ -40,53 +40,58 @@ class CachableQueryBuilder extends AbstractCachable implements CachableQueryBuil
     }
 
     /**
-     * @param $id
+     * @param       $id
+     * @param array $columns
      *
      * @return Model
      */
-    public function find($id): Model
+    public function find($id, array $columns = ['*']): Model
     {
         if (!$this->cache) {
-            return $this->repository->find($id);
+            return $this->repository->find($id, $columns);
         }
 
         $key = sprintf('find.%s', $id);
-        $key = $this->getCacheKey($key);
+        $key = $this->getCacheKey($key, $columns);
 
-        return $this->cache->remember($key, $this->ttl, function () use ($id) {
-            return $this->repository->find($id);
+        return $this->cache->remember($key, $this->ttl, function () use ($id, $columns) {
+            return $this->repository->find($id, $columns);
         });
     }
 
     /**
+     * @param array $columns
+     *
      * @return Collection
      */
-    public function get(): Collection
+    public function get(array $columns = ['*']): Collection
     {
         if (!$this->cache) {
-            return $this->repository->get();
+            return $this->repository->get($columns);
         }
 
-        $key = $this->getCacheKey('get');
+        $key = $this->getCacheKey('get', $columns);
 
-        return $this->cache->remember($key, $this->ttl, function () {
-            return $this->repository->get();
+        return $this->cache->remember($key, $this->ttl, function () use ($columns) {
+            return $this->repository->get($columns);
         });
     }
 
     /**
+     * @param array $columns
+     *
      * @return LengthAwarePaginator
      */
-    public function paginate(): LengthAwarePaginator
+    public function paginate(array $columns = ['*']): LengthAwarePaginator
     {
         if (!$this->cache) {
-            return $this->repository->paginate();
+            return $this->repository->paginate($columns);
         }
 
-        $key = $this->getCacheKey('paginate');
+        $key = $this->getCacheKey('paginate', $columns);
 
-        return $this->cache->remember($key, $this->ttl, function () {
-            return $this->repository->paginate();
+        return $this->cache->remember($key, $this->ttl, function () use ($columns) {
+            return $this->repository->paginate($columns);
         });
     }
 

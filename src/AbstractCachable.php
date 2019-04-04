@@ -95,6 +95,31 @@ abstract class AbstractCachable
     }
 
     /**
+     * @param string $existingKey
+     *
+     * @return string
+     */
+    protected function setQueryCacheKey(string $existingKey = ''): string
+    {
+        $queryArray = $this->request->query->all();
+
+        if (!empty($queryArray)) {
+            $cacheKey = empty($existingKey) ? 'request' : ':request';
+            $queryArray = array_dot($queryArray);
+
+            ksort($queryArray);
+
+            foreach ($queryArray as $key => $value) {
+                $cacheKey = sprintf('%s:%s,%s', $cacheKey, $key, $value);
+            }
+
+            return sprintf('%s%s', $existingKey, $cacheKey);
+        }
+
+        return $existingKey;
+    }
+
+    /**
      * @param mixed ...$params
      *
      * @return string
@@ -103,12 +128,20 @@ abstract class AbstractCachable
     {
         $key = sprintf('querybuilder:%s', $this->getTable());
 
-        if ($this->cacheKey) {
-            $key = sprintf('%s:%s', $key, $this->cacheKey);
+        foreach ($params as $param) {
+            if (is_array($param)) {
+                sort($param);
+
+                $param = implode('.', $param);
+            }
+
+            $key = sprintf('%s:%s', $key, $param);
         }
 
-        foreach ($params as $param) {
-            $key = sprintf('%s:%s', $key, $param);
+        $key = $this->setQueryCacheKey($key);
+
+        if ($this->cacheKey) {
+            $key = sprintf('%s:%s', $key, $this->cacheKey);
         }
 
         return md5($key);

@@ -27,21 +27,26 @@ interface QueryBuilderInterface
     public function inject(callable $callable): QueryBuilderInterface;
 
     /**
-     * @param $id
+     * @param       $id
+     * @param array $columns
      *
      * @return Model
      */
-    public function find($id): Model;
+    public function find($id, array $columns = ['*']): Model;
 
     /**
+     * @param array $columns
+     *
      * @return Collection
      */
-    public function get(): Collection;
+    public function get(array $columns = ['*']): Collection;
 
     /**
+     * @param array $columns
+     *
      * @return LengthAwarePaginator
      */
-    public function paginate(): LengthAwarePaginator;
+    public function paginate(array $columns = ['*']): LengthAwarePaginator;
 
     /**
      * @return int

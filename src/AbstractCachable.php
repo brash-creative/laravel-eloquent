@@ -42,30 +42,32 @@ abstract class AbstractCachable
      * @var string
      */
     protected $cacheKey;
+    /**
+     * @var bool
+     */
+    private $enabled;
 
     /**
      * CachableQueryBuilder constructor.
      *
      * @param QueryBuilderInterface $repository
-     * @param Cache               $cache
-     * @param float               $ttl
-     * @param Request|null        $request
-     * @param null|string         $env
+     * @param Cache                 $cache
+     * @param float                 $ttl
+     * @param Request|null          $request
+     * @param bool                  $enabled
      */
     public function __construct(
         QueryBuilderInterface $repository,
         Cache $cache,
         float $ttl = 10,
         ?Request $request = null,
-        ?string $env = null
+        bool $enabled = true
     ) {
         $this->repository = $repository;
         $this->ttl = $ttl;
         $this->request = $request ?? request();
 
-        $env = $env ?? config('app.env');
-
-        if ($env == 'production') {
+        if ($enabled) {
             $this->setCache($cache);
         }
     }

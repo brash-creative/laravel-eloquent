@@ -9,15 +9,42 @@ use Illuminate\Database\Eloquent\Model;
 
 interface QueryBuilderInterface
 {
+    /**
+     * @return Model
+     */
     public function getModel(): Model;
 
+    /**
+     * @return Builder
+     */
     public function getQuery(): Builder;
 
-    public function inject(callable $callable): RepositoryInterface;
+    /**
+     * @param callable $callable
+     *
+     * @return QueryBuilderInterface
+     */
+    public function inject(callable $callable): QueryBuilderInterface;
 
+    /**
+     * @param $id
+     *
+     * @return Model
+     */
+    public function find($id): Model;
+
+    /**
+     * @return Collection
+     */
     public function get(): Collection;
 
+    /**
+     * @return LengthAwarePaginator
+     */
     public function paginate(): LengthAwarePaginator;
 
+    /**
+     * @return int
+     */
     public function count(): int;
 }

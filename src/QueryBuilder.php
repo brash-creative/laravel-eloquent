@@ -9,8 +9,13 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use function request;
 
-class QueryBuilder implements RepositoryInterface
+/**
+ * Class QueryBuilder
+ * @package Brash\Eloquent
+ */
+class QueryBuilder implements QueryBuilderInterface
 {
     /**
      * @var Model
@@ -59,28 +64,47 @@ class QueryBuilder implements RepositoryInterface
         $this->filterList = $filterList ?? new FilterList;
     }
 
+    /**
+     * @return Model
+     */
     public function getModel(): Model
     {
         return $this->model;
     }
 
-    public function inject(callable $callable): RepositoryInterface
+    /**
+     * @param callable $callable
+     *
+     * @return QueryBuilderInterface
+     */
+    public function inject(callable $callable): QueryBuilderInterface
     {
         $this->injections[] = $callable;
 
         return $this;
     }
 
+    /**
+     * @param int $id
+     *
+     * @return Model
+     */
     public function find($id): Model
     {
         return $this->getQuery()->find($id);
     }
 
+    /**
+     * @return Collection
+     */
     public function get(): Collection
     {
         return $this->getQuery()->get();
     }
 
+    /**
+     * @return LengthAwarePaginator
+     */
     public function paginate(): LengthAwarePaginator
     {
         $limit = $this->request->query->get('limit');
@@ -88,11 +112,17 @@ class QueryBuilder implements RepositoryInterface
         return $this->getQuery()->paginate($limit);
     }
 
+    /**
+     * @return int
+     */
     public function count(): int
     {
         return $this->getQuery()->count();
     }
 
+    /**
+     * @return Builder
+     */
     public function getQuery(): Builder
     {
         $query = (clone $this->model)
@@ -105,6 +135,11 @@ class QueryBuilder implements RepositoryInterface
         return $query;
     }
 
+    /**
+     * @param string $key
+     *
+     * @return array
+     */
     protected function getWith($key = 'include'): array
     {
         if ($this->request->query->has($key)) {
@@ -116,11 +151,17 @@ class QueryBuilder implements RepositoryInterface
         return [];
     }
 
+    /**
+     * @return array
+     */
     protected function getWithCount(): array
     {
         return $this->getWith('includeCount');
     }
 
+    /**
+     * @param Builder $builder
+     */
     protected function applyAll(Builder $builder)
     {
         $this->applyInjections($builder);
@@ -128,6 +169,9 @@ class QueryBuilder implements RepositoryInterface
         $this->applySort($builder);
     }
 
+    /**
+     * @param Builder $builder
+     */
     protected function applyInjections(Builder $builder)
     {
         foreach ($this->injections as $injection) {
@@ -135,6 +179,9 @@ class QueryBuilder implements RepositoryInterface
         }
     }
 
+    /**
+     * @param Builder $builder
+     */
     protected function applyFilters(Builder $builder)
     {
         $filterArray = (array) $this->request->query->get('filter');
@@ -147,6 +194,9 @@ class QueryBuilder implements RepositoryInterface
         }
     }
 
+    /**
+     * @param Builder $builder
+     */
     protected function applySort(Builder $builder)
     {
         $sortArray = (array) $this->request->query->get('sort');
@@ -154,26 +204,5 @@ class QueryBuilder implements RepositoryInterface
         foreach ($sortArray as $column => $direction) {
             $builder->orderBy($column, $direction);
         }
-    }
-
-    public function with(array $with): RepositoryInterface
-    {
-        $this->getQuery()->with($with);
-
-        return $this;
-    }
-
-    public function withCount(array $withCount): RepositoryInterface
-    {
-        $this->getQuery()->withCount($withCount);
-
-        return $this;
-    }
-
-    public function orderBy(OrderBy $orderBy): RepositoryInterface
-    {
-        $this->getQuery()->orderBy($orderBy->getColumn(), $orderBy->getDirection());
-
-        return $this;
     }
 }

@@ -42,10 +42,6 @@ abstract class AbstractCachable
      * @var string
      */
     protected $cacheKey;
-    /**
-     * @var bool
-     */
-    private $enabled;
 
     /**
      * CachableQueryBuilder constructor.
@@ -59,9 +55,9 @@ abstract class AbstractCachable
     public function __construct(
         QueryBuilderInterface $repository,
         Cache $cache,
+        bool $enabled = true,
         float $ttl = 10,
-        ?Request $request = null,
-        bool $enabled = true
+        ?Request $request = null
     ) {
         $this->repository = $repository;
         $this->ttl = $ttl;

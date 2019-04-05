@@ -136,8 +136,8 @@ abstract class AbstractCachable
             $key = sprintf('%s-%s', $key, $param);
         }
 
-        $key = sprintf('%s-%s', $key, $this->getQueryStringKey());
-        $key = sprintf('%s-%s', $key, $this->cacheKey);
+        $key = sprintf('%s-%s', rtrim($key, '-'), $this->getQueryStringKey());
+        $key = sprintf('%s-%s', rtrim($key, '-'), $this->cacheKey);
 
         $key = rtrim($key, '-');
 

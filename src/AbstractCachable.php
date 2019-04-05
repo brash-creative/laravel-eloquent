@@ -93,28 +93,28 @@ abstract class AbstractCachable
     }
 
     /**
-     * @param string $existingKey
-     *
      * @return string
      */
-    protected function setQueryCacheKey(string $existingKey = ''): string
+    private function getQueryStringKey(): string
     {
         $queryArray = $this->request->query->all();
 
-        if (!empty($queryArray)) {
-            $cacheKey = empty($existingKey) ? 'request' : ':request';
-            $queryArray = array_dot($queryArray);
-
-            ksort($queryArray);
-
-            foreach ($queryArray as $key => $value) {
-                $cacheKey = sprintf('%s:%s,%s', $cacheKey, $key, $value);
-            }
-
-            return sprintf('%s%s', $existingKey, $cacheKey);
+        if (empty($queryArray)) {
+            return '';
         }
 
-        return $existingKey;
+        $keyValues = [];
+        $queryArray = array_dot($queryArray);
+
+        ksort($queryArray);
+
+        foreach ($queryArray as $key => $value) {
+            $keyValues[] = sprintf('%s#%s', $key, $value);
+        }
+
+        $key = implode(',', $keyValues);
+
+        return sprintf('queryString:%s', $key);
     }
 
     /**
@@ -124,23 +124,25 @@ abstract class AbstractCachable
      */
     protected function getCacheKey(...$params): string
     {
-        $key = sprintf('querybuilder:%s', $this->getTable());
+        $key = sprintf('querybuilder#%s', $this->getTable());
 
         foreach ($params as $param) {
             if (is_array($param)) {
                 sort($param);
 
-                $param = implode('.', $param);
+                $param = implode(',', $param);
             }
 
-            $key = sprintf('%s:%s', $key, $param);
+            $key = sprintf('%s-%s', $key, $param);
         }
 
-        $key = $this->setQueryCacheKey($key);
+        $key = sprintf('%s-queryString#%s', $key, $this->getQueryStringKey());
 
         if ($this->cacheKey) {
-            $key = sprintf('%s:%s', $key, $this->cacheKey);
+            $key = sprintf('%s-%s', $key, $this->cacheKey);
         }
+
+        $key = rtrim($key, '-');
 
         return md5($key);
     }

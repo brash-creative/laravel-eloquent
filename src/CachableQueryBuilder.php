@@ -51,7 +51,7 @@ class CachableQueryBuilder extends AbstractCachable implements CachableQueryBuil
             return $this->repository->find($id, $columns);
         }
 
-        $key = sprintf('find.%s', $id);
+        $key = sprintf('find#%s', $id);
         $key = $this->getCacheKey($key, $columns);
 
         return $this->cache->remember($key, $this->ttl, function () use ($id, $columns) {

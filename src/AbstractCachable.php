@@ -41,7 +41,7 @@ abstract class AbstractCachable
     /**
      * @var string
      */
-    protected $cacheKey;
+    protected $cacheKey = '';
 
     /**
      * CachableQueryBuilder constructor.
@@ -73,7 +73,19 @@ abstract class AbstractCachable
      *
      * @return $this
      */
-    public function key(string $key)
+    public function addKey(string $key)
+    {
+        $this->cacheKey = sprintf('%s-%s', $this->cacheKey, $key);
+
+        return $this;
+    }
+
+    /**
+     * @param string $key
+     *
+     * @return $this
+     */
+    public function setKey(string $key)
     {
         $this->cacheKey = $key;
 

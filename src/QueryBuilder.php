@@ -92,7 +92,7 @@ class QueryBuilder implements QueryBuilderInterface
      */
     public function find($id, array $columns = ['*']): Model
     {
-        return $this->getQuery()->find($id, $columns);
+        return $this->getQuery()->findOrFail($id, $columns);
     }
 
     /**

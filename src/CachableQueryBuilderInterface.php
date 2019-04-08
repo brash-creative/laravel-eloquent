@@ -4,5 +4,7 @@ namespace Brash\Eloquent;
 
 interface CachableQueryBuilderInterface extends QueryBuilderInterface
 {
-    public function key(string $key);
+    public function addKey(string $key);
+
+    public function setKey(string $key);
 }

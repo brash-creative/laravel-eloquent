@@ -4,14 +4,12 @@ namespace Brash\Eloquent;
 
 use Illuminate\Cache\TaggableStore;
 use Illuminate\Contracts\Cache\Repository as Cache;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 
 abstract class AbstractCachable
 {
     /**
-     * @var RepositoryInterface
+     * @var QueryBuilderInterface
      */
     protected $repository;
 
@@ -43,31 +41,29 @@ abstract class AbstractCachable
     /**
      * @var string
      */
-    protected $cacheKey;
+    protected $cacheKey = '';
 
     /**
      * CachableQueryBuilder constructor.
      *
-     * @param RepositoryInterface $repository
-     * @param Cache               $cache
-     * @param float               $ttl
-     * @param Request|null        $request
-     * @param null|string         $env
+     * @param QueryBuilderInterface $repository
+     * @param Cache                 $cache
+     * @param float                 $ttl
+     * @param Request|null          $request
+     * @param bool                  $enabled
      */
     public function __construct(
-        RepositoryInterface $repository,
+        QueryBuilderInterface $repository,
         Cache $cache,
+        bool $enabled = true,
         float $ttl = 10,
-        ?Request $request = null,
-        ?string $env = null
+        ?Request $request = null
     ) {
         $this->repository = $repository;
         $this->ttl = $ttl;
         $this->request = $request ?? request();
 
-        $env = $env ?? config('app.env');
-
-        if ($env == 'production') {
+        if ($enabled) {
             $this->setCache($cache);
         }
     }
@@ -77,13 +73,28 @@ abstract class AbstractCachable
      *
      * @return $this
      */
-    public function key(string $key)
+    public function addKey(string $key)
+    {
+        $this->cacheKey = sprintf('%s-%s', $this->cacheKey, $key);
+
+        return $this;
+    }
+
+    /**
+     * @param string $key
+     *
+     * @return $this
+     */
+    public function setKey(string $key)
     {
         $this->cacheKey = $key;
 
         return $this;
     }
 
+    /**
+     * @param Cache $cache
+     */
     private function setCache(Cache $cache): void
     {
         if (is_subclass_of($cache->getStore(), TaggableStore::class)) {
@@ -93,116 +104,60 @@ abstract class AbstractCachable
         $this->cache = $cache;
     }
 
-    protected function setUserCacheKey(string $existingKey = ''): string
-    {
-        $user = $this->request->user();
-
-        if ($user instanceof Model && $user->roles instanceof Collection) {
-            /** @var array $roles */
-            $roles = $user->roles->map(function ($item) {
-                return $item->name;
-            })->all();
-
-            ksort($roles);
-
-            return sprintf('%s:roles:%s', $existingKey, implode('.', $roles));
-        }
-
-        return $existingKey;
-    }
-
-    protected function setQueryCacheKey(string $existingKey = ''): string
+    /**
+     * @return string
+     */
+    private function getQueryStringKey(): string
     {
         $queryArray = $this->request->query->all();
 
-        if (!empty($queryArray)) {
-            $cacheKey = empty($existingKey) ? 'request' : ':request';
-            $queryArray = array_dot($queryArray);
-
-            ksort($queryArray);
-
-            foreach ($queryArray as $key => $value) {
-                $cacheKey = sprintf('%s:%s,%s', $cacheKey, $key, $value);
-            }
-
-            return sprintf('%s%s', $existingKey, $cacheKey);
+        if (empty($queryArray)) {
+            return '';
         }
 
-        return $existingKey;
-    }
+        $keyValues = [];
+        $queryArray = array_dot($queryArray);
 
-    protected function setRelationsCacheKey(string $existingKey = ''): string
-    {
-        $key = '';
+        ksort($queryArray);
 
-        if (!empty($this->with)) {
-            $with = $this->with;
-
-            sort($with);
-
-            $key = sprintf(':relations:%s', implode(',', $with));
+        foreach ($queryArray as $key => $value) {
+            $keyValues[] = sprintf('%s#%s', $key, $value);
         }
 
-        return sprintf('%s%s', $existingKey, $key);
+        $key = implode(',', $keyValues);
+
+        return sprintf('queryString:%s', $key);
     }
 
-    protected function setCountCacheKey(string $existingKey = ''): string
-    {
-        $key = '';
-
-        if (!empty($this->withCount)) {
-            $with = $this->withCount;
-
-            sort($with);
-
-            $key = sprintf(':count:%s', implode(',', $with));
-        }
-
-        return sprintf('%s%s', $existingKey, $key);
-    }
-
-    protected function setSqlCacheKey(string $existingKey = ''): string
-    {
-        $key = md5($this->repository->getQuery()->toSql());
-
-        return sprintf('%s:query:%s', $existingKey, $key);
-    }
-
-    protected function setBindingsCacheKey(string $existingKey = ''): string
-    {
-        $key = '';
-
-        if (!empty($this->repository->getQuery()->getBindings())) {
-            $bindings = $this->repository->getQuery()->getBindings();
-
-            sort($bindings);
-
-            $key = sprintf(':bindings:%s', implode(',', $bindings));
-        }
-
-        return sprintf('%s%s', $existingKey, $key);
-    }
-
+    /**
+     * @param mixed ...$params
+     *
+     * @return string
+     */
     protected function getCacheKey(...$params): string
     {
-        $key = sprintf('querybuilder:%s', $this->getTable());
-        $key = $this->setUserCacheKey($key);
-        $key = $this->setQueryCacheKey($key);
-        $key = $this->setRelationsCacheKey($key);
-        $key = $this->setCountCacheKey($key);
-        $key = $this->setSqlCacheKey($key);
-        $key = $this->setBindingsCacheKey($key);
-
-        if ($this->cacheKey) {
-            $key = sprintf('%s:%s', $key, $this->cacheKey);
-        }
+        $key = sprintf('querybuilder#%s', $this->getTable());
 
         foreach ($params as $param) {
-            $key = sprintf('%s:%s', $key, $param);
+            if (is_array($param)) {
+                sort($param);
+
+                $param = implode(',', $param);
+            }
+
+            $key = sprintf('%s-%s', $key, $param);
         }
+
+        $key = sprintf('%s-%s', rtrim($key, '-'), $this->getQueryStringKey());
+        $key = sprintf('%s-%s', rtrim($key, '-'), $this->cacheKey);
+
+        $key = rtrim($key, '-');
 
         return md5($key);
     }
 
+    /**
+     * @return string
+     */
     abstract protected function getTable(): string;
 }
